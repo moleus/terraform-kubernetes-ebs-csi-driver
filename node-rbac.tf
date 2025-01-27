@@ -1,3 +1,12 @@
+#- labels           = {} -> null
+#- name             = "ebs-csi-node" -> null
+
+removed {
+  from = kubernetes_service_account.node
+  lifecycle {
+    destroy = true
+  }
+}
 resource "kubernetes_service_account" "node" {
   metadata {
     name      = local.daemonset_name
@@ -7,46 +16,18 @@ resource "kubernetes_service_account" "node" {
   automount_service_account_token = true
 }
 
-resource "kubernetes_cluster_role" "node" {
-  metadata {
-    name   = "ebs-csi-node-role"
-    labels = var.labels
-  }
-
-  rule {
-    api_groups = [""]
-    resources  = ["nodes"]
-    verbs      = ["get", "patch"]
-  }
-
-  rule {
-    api_groups = ["storage.k8s.io"]
-    resources  = ["volumeattachments"]
-    verbs      = ["get", "list", "watch"]
-  }
-
-  rule {
-    api_groups = ["storage.k8s.io"]
-    resources  = ["csinodes"]
-    verbs      = ["get"]
+removed {
+  from = kubernetes_cluster_role.node
+  lifecycle {
+    # "app.kubernetes.io/managed-by" = "EKS"
+    destroy = false
   }
 }
 
-resource "kubernetes_cluster_role_binding" "node" {
-  metadata {
-    name   = "ebs-csi-node-getter-binding"
-    labels = var.labels
-  }
-
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = kubernetes_cluster_role.node.metadata[0].name
-  }
-
-  subject {
-    kind      = "ServiceAccount"
-    name      = kubernetes_service_account.node.metadata[0].name
-    namespace = kubernetes_service_account.node.metadata[0].namespace
+removed {
+  from = kubernetes_cluster_role_binding.node
+  lifecycle {
+    # "app.kubernetes.io/managed-by" = "EKS"
+    destroy = false
   }
 }
